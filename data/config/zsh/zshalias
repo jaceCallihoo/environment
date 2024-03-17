@@ -1,0 +1,7 @@
+alias vim=nvim
+alias l=ls
+alias ll="ls -l"
+alias endx="pkill xinit"
+alias aaa="setxkbmap -layout us -variant dvorak &> /dev/null ; loadkeys dvorak &> /dev/null"
+alias vim="nvim"
+alias brave="brave --password-store=basic"

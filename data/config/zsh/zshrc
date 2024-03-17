@@ -1,0 +1,39 @@
+#!/usr/bin/zsh
+
+# Source Files
+[ -f $ZDOTDIR/zshalias ] && source $ZDOTDIR/zshalias 
+[ -f $ZDOTDIR/zshenv ] && source $ZDOTDIR/zshenv 
+
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.config/zsh/.histfile
+HISTSIZE=4000
+SAVEHIST=4000
+unsetopt beep
+bindkey -v
+# End of lines configured by zsh-newuser-install
+# The following lines were added by compinstall
+zstyle :compinstall filename '/home/jace/.config/zsh/.zshrc'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+# version control stuff
+autoload -Uz vcs_info
+precmd() { vcs_info }
+
+zstyle ':vcs_info:git:*' formats '%b '
+
+# Bind history seach
+bindkey '^R' history-incremental-search-backward
+
+# make ctrl delete/backspace remove the whole word
+bindkey '^H' backward-kill-word
+bindkey '5~' kill-word
+
+# Do not enter command lines into the history list if they are duplicates of the previous event.
+setopt HIST_IGNORE_DUPS
+
+# prompt
+setopt PROMPT_SUBST
+PROMPT='%F{white}%~%f %F{blue}${vcs_info_msg_0_}%f> '

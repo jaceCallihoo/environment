@@ -1,0 +1,44 @@
+---
+
+- name: Configure Environment 
+  hosts: localhost
+  connection: local
+  tasks:
+
+  - name: Debug
+    ansible.builtin.debug:
+      msg: "Current distro: {{ ansible_distribution }}"
+
+  - name: Update packages
+    become: true
+    package:
+      update_cache: yes
+  
+  - name: Install node
+    become: true
+    package:
+      name: "{{ package.node_js }}"
+      state: latest
+  
+  - name: Install neovim 
+    become: true
+    package:
+      name: "{{ package.neovim }}"
+      state: latest
+
+  - name: Install Go 
+    become: true
+    package:
+      name: "{{ package.golang }}"
+      state: latest
+  
+  roles:
+    - node
+    - zsh
+
+- name: Test
+  hosts: localhost 
+  become: true
+  roles:
+    - test
+

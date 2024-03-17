@@ -1,0 +1,6 @@
+package:
+  node_js: nodejs 
+  neovim: neovim
+  golang: go
+
+

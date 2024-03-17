@@ -1,0 +1,12 @@
+- name: Install NodeJS
+  become: true
+  package: 
+    name: nodejs
+    state: latest
+
+- name: Install Node Version Manager
+  kewlfft.aur.aur:
+    name: nvm
+    state: latest
+  
+
