@@ -1,4 +1,5 @@
 - name: Install zsh
+  become: true
   pacman: 
     name: zsh
     state: latest
