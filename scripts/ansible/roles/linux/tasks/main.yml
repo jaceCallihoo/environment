@@ -1,0 +1,5 @@
+- name: Create User Jace
+  ansible.builtin.user:
+    name: jace
+    create_home: yes
+    group: wheel
