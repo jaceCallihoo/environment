@@ -1,0 +1,11 @@
+- name: Install Neovim 
+  become: true
+  package: 
+    name: neovim 
+    state: latest
+
+- name: Copy Neovim Config
+  ansible.builtin.copy:
+    src: nvim
+    dest: /home/jace/.config
+
