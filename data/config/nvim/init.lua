@@ -1,5 +1,6 @@
 
 require("jace.remap")
+require("jace.set")
 
 --[[
 
@@ -466,10 +467,10 @@ require('which-key').register({
 local servers = {
     clangd = {},
     gopls = {},
-    -- pyright = {},
+    pyright = {},
     rust_analyzer = {},
-    -- tsserver = {},
-    -- html = { filetypes = { 'html', 'twig', 'hbs'} },
+    tsserver = {},
+    html = { filetypes = { 'html', 'twig', 'hbs'} },
 
     lua_ls = {
         Lua = {
