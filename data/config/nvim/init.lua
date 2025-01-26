@@ -21,7 +21,7 @@ vim.opt.incsearch = true -- update search results as you type
 
 -- set line numbers
 vim.opt.number = true -- set line number on current line
-vim.opt.relativenumber = true -- set relative number on other lines
+-- vim.opt.relativenumber = true -- set relative number on other lines
 
 -- delete to the beggining of a word in insert mode
 vim.keymap.set("i", "<C-H>", "<C-W>", { noremap = true })
@@ -69,6 +69,8 @@ vim.api.nvim_set_keymap("o", "<Space>", "<NOP>", { noremap = true, silent = true
 
 -- not sure if this one is useful yet
 -- vim.o.completeopt = 'menuone,noselect'
+
+vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { noremap = true, silent = true })
 
 -- package manager
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -120,10 +122,10 @@ require("lazy").setup({
 						vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
 					end
 
-					map("gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
-					map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
-					map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
-					map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
+					map("<leader>gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
+					map("<leader>gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
+					map("<leader>gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
+					map("<leader>gt", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
 					map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
 					map(
 						"<leader>ws",
@@ -172,7 +174,7 @@ require("lazy").setup({
 
 			local servers = {
 				-- clangd = {},
-				-- gopls = {},
+				gopls = {},
 				-- pyright = {},
 				-- rust_analyzer = {},
 				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
@@ -181,7 +183,7 @@ require("lazy").setup({
 				--    https://github.com/pmizio/typescript-tools.nvim
 				--
 				-- But for many setups, the LSP (`ts_ls`) will work just fine
-				-- ts_ls = {},
+				ts_ls = {},
 				--
 
 				lua_ls = {
@@ -336,15 +338,6 @@ require("lazy").setup({
 			vim.cmd("highlight ColorColumn ctermbg=0 guibg=#232433")
 		end,
 	},
-	{
-		"nvim-tree/nvim-tree.lua",
-		config = function()
-			require("nvim-tree").setup()
-			vim.g.loaded_netrw = 1
-			vim.g.loaded_netrwPlugin = 1
-			vim.api.nvim_set_keymap("n", "<leader>x", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
-		end,
-	},
 	{ -- Fuzzy Finder (files, lsp, etc)
 		"nvim-telescope/telescope.nvim",
 		event = "VimEnter",
@@ -458,17 +451,6 @@ require("lazy").setup({
 					lualine_x = { "encoding", "fileformat", "filetype" },
 					lualine_y = { "progress" },
 					lualine_z = { "location" },
-				},
-			})
-		end,
-	},
-	{
-		"echasnovski/mini.files",
-		version = false,
-		config = function()
-			require("mini.files").setup({
-				mappings = {
-					go_in_plus = "<CR>",
 				},
 			})
 		end,
