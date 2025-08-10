@@ -8,12 +8,46 @@ vim.opt.softtabstop = 4 -- insert 4 spaces when <tab> is pressed
 vim.opt.shiftwidth = 4 -- number of spaces for auto inted
 vim.opt.expandtab = true -- convert the <tab> key into spaces
 
+-- make vim create a vertical split on the right
+vim.o.splitright = true
+
 -- disable comment continuation
 vim.api.nvim_create_autocmd("VimEnter", {
 	callback = function()
 		vim.opt_local.formatoptions:remove({ "c", "r", "o" })
 	end,
 })
+
+-- disable wrap on code files
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = {
+		"python",
+		"lua",
+		"go",
+		"rust",
+		"javascript",
+		"typescript",
+		"c",
+		"cpp",
+		"java",
+		"html",
+		"css",
+		"json",
+		"yaml",
+		"toml",
+		"sh",
+		"zsh",
+		"bash",
+	},
+	callback = function()
+		vim.opt_local.wrap = false
+	end,
+})
+
+-- reload config (this does not work currently)
+vim.keymap.set("n", "<leader>rr", function()
+	require("lazy").reload()
+end, { desc = "Reload Neovim config with Lazy" })
 
 -- search
 vim.opt.hlsearch = false -- disable highlighting after search
@@ -23,8 +57,11 @@ vim.opt.incsearch = true -- update search results as you type
 vim.opt.number = true -- set line number on current line
 -- vim.opt.relativenumber = true -- set relative number on other lines
 
--- delete to the beggining of a word in insert mode
+-- ctrl bs for nicer deleting in insert and command mode
 vim.keymap.set("i", "<C-H>", "<C-W>", { noremap = true })
+
+-- same for command mode
+vim.api.nvim_set_keymap("c", "<C-H>", "<C-W>", { noremap = true })
 
 -- make a column on the right hand side to signify 80 characters
 vim.opt.colorcolumn = "80"
@@ -69,6 +106,19 @@ vim.api.nvim_set_keymap("o", "<Space>", "<NOP>", { noremap = true, silent = true
 
 -- not sure if this one is useful yet
 -- vim.o.completeopt = 'menuone,noselect'
+
+-- markdown stuff
+
+vim.g.vim_markdown_fenced_languages = {
+	"bash=sh",
+	"js=javascript",
+	"json",
+	"python",
+	"go",
+	"lua",
+	"html",
+	"css",
+}
 
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { noremap = true, silent = true })
 
@@ -124,7 +174,7 @@ require("lazy").setup({
 
 					map("<leader>gd", require("telescope.builtin").lsp_definitions, "[G]oto [D]efinition")
 					map("<leader>gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
-					map("<leader>gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
+					map("<leader>gi", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
 					map("<leader>gt", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
 					map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
 					map(
@@ -135,6 +185,9 @@ require("lazy").setup({
 					map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
 					map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
+
+					-- test
+					vim.keymap.set("n", "K", vim.lsp.buf.hover, { desc = "LSP Hover" })
 
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
 					if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
@@ -175,7 +228,7 @@ require("lazy").setup({
 			local servers = {
 				-- clangd = {},
 				gopls = {},
-				-- pyright = {},
+				pyright = {},
 				-- rust_analyzer = {},
 				-- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
 				--
@@ -323,21 +376,21 @@ require("lazy").setup({
 			"rafamadriz/friendly-snippets",
 		},
 	},
-	{
-		"ray-x/aurora",
-		init = function()
-			vim.g.aurora_italic = 1
-			vim.g.aurora_transparent = 1
-			vim.g.aurora_bold = 1
-		end,
-		config = function()
-			vim.cmd.colorscheme("aurora")
-			-- override defaults
-			vim.api.nvim_set_hl(0, "@number", { fg = "#e933e3" })
-			-- make color column match lua line
-			vim.cmd("highlight ColorColumn ctermbg=0 guibg=#232433")
-		end,
-	},
+	-- {
+	-- 	"ray-x/aurora",
+	-- 	init = function()
+	-- 		vim.g.aurora_italic = 1
+	-- 		vim.g.aurora_transparent = 1
+	-- 		vim.g.aurora_bold = 1
+	-- 	end,
+	-- 	config = function()
+	-- 		vim.cmd.colorscheme("aurora")
+	-- 		-- override defaults
+	-- 		vim.api.nvim_set_hl(0, "@number", { fg = "#e933e3" })
+	-- 		-- make color column match lua line
+	-- 		vim.cmd("highlight ColorColumn ctermbg=0 guibg=#232433")
+	-- 	end,
+	-- },
 	{ -- Fuzzy Finder (files, lsp, etc)
 		"nvim-telescope/telescope.nvim",
 		event = "VimEnter",
@@ -459,7 +512,223 @@ require("lazy").setup({
 		"lewis6991/gitsigns.nvim",
 		opts = {},
 	},
+	{
+		"nvimtools/hydra.nvim",
+		dependencies = {
+			"mfussenegger/nvim-dap",
+			"leoluz/nvim-dap-go",
+			"nvim-neotest/nvim-nio",
+			"rcarriga/nvim-dap-ui",
+			"nvim-lualine/lualine.nvim",
+		},
+		config = function()
+			local Hydra = require("hydra")
+
+			DapHydra = Hydra({
+				name = "DEBUG",
+				config = {
+					color = "pink",
+					desc = "Debug mode",
+					invoke_on_body = true,
+				},
+
+				mode = "n",
+				body = "<Leader>d",
+				heads = {
+					{
+						"U",
+						function()
+							require("dapui").toggle()
+						end,
+					},
+					{
+						"b",
+						function()
+							require("dap").toggle_breakpoint()
+						end,
+					},
+					{
+						"B",
+						function()
+							require("dap").clear_breakpoints()
+						end,
+					},
+					{
+						"c",
+						function()
+							if vim.bo.filetype ~= "dap-float" then
+								require("dap").continue()
+							end
+						end,
+					},
+					{
+						"u",
+						function()
+							if vim.bo.filetype ~= "dap-float" then
+								require("dap").step_out()
+							end
+						end,
+					},
+					{
+						"o",
+						function()
+							if vim.bo.filetype ~= "dap-float" then
+								print(vim.bo.filetype)
+								require("dap").step_over()
+							end
+						end,
+					},
+					{
+						"i",
+						function()
+							if vim.bo.filetype ~= "dap-float" then
+								require("dap").step_into()
+							end
+						end,
+					},
+					{
+						"x",
+						function()
+							require("dap").terminate()
+						end,
+					},
+					{
+						"*",
+						function()
+							require("dap").run_to_cursor()
+						end,
+					},
+					{
+						"Ct",
+						function()
+							require("dap-go").debug_test()
+						end,
+					},
+					{
+						"s",
+						function()
+							if vim.bo.filetype ~= "dap-float" then
+								require("dap.ui.widgets").centered_float(require("dap.ui.widgets").scopes)
+							end
+						end,
+					},
+					{ "<Esc>", nil, { exit = true, nowait = true } },
+				},
+			})
+		end,
+	},
+	{
+		"mfussenegger/nvim-dap",
+		dependencies = {
+			"leoluz/nvim-dap-go",
+			"rcarriga/nvim-dap-ui",
+			"nvim-neotest/nvim-nio",
+		},
+		config = function()
+			local dap = require("dap")
+			local dapui = require("dapui")
+
+			-- note: if you're not getting output with a launch.json file you need to set "outputMode": "remote" in the configurations
+
+			require("dap-go").setup()
+			dapui.setup()
+
+			dap.listeners.before.attach.dapui_config = function()
+				dapui.open()
+			end
+			dap.listeners.before.launch.dapui_config = function()
+				dapui.open()
+			end
+			dap.listeners.before.event_terminated.dapui_config = function()
+				-- Prevent dapui from closing on process exit
+				-- dapui.close()
+			end
+			dap.listeners.before.event_exited.dapui_config = function()
+				-- Prevent dapui from closing on process exit
+				-- dapui.close()
+			end
+		end,
+	},
+	{
+		"nvim-tree/nvim-web-devicons",
+		config = function()
+			require("nvim-web-devicons").setup()
+		end,
+	},
+	{
+		"nvim-treesitter/nvim-treesitter",
+		config = function()
+			require("nvim-treesitter.configs").setup({
+				ensure_installed = {
+					"go",
+					"markdown",
+					"markdown_inline",
+					"bash",
+					"json",
+					"lua",
+					"python",
+					"javascript",
+				}, -- Add more languages as needed
+				highlight = {
+					enable = true,
+					additional_vim_regex_highlighting = { "markdown" },
+				},
+				playground = {
+					enabled = true,
+					updatetime = 25,
+					persist_queries = false,
+				},
+			})
+		end,
+	},
+	{
+		"nvim-treesitter/playground",
+		cmd = "TSPlaygroundToggle",
+	},
+	{
+		"tiagovla/tokyodark.nvim",
+		opts = {
+			-- custom options here
+		},
+		config = function(_, opts)
+			require("tokyodark").setup(opts) -- calling setup is optional
+			vim.cmd([[colorscheme tokyodark]])
+		end,
+	},
+	{
+		"f-person/git-blame.nvim",
+		-- load the plugin at startup
+		event = "VeryLazy",
+		-- Because of the keys part, you will be lazy loading this plugin.
+		-- The plugin will only load once one of the keys is used.
+		-- If you want to load the plugin at startup, add something like event = "VeryLazy",
+		-- or lazy = false. One of both options will work.
+		opts = {
+			-- your configuration comes here
+			-- for example
+			enabled = false, -- if you want to enable the plugin
+			message_template = " <summary> • <date> • <author> • <<sha>>", -- template for the blame message, check the Message template section for more options
+			date_format = "%m-%d-%Y %H:%M:%S", -- template for the date, check Date format section for more options
+			virtual_text_column = 1, -- virtual text start column, check Start virtual text at column section for more options
+		},
+	},
+	{
+		"tpope/vim-sleuth",
+		event = "BufReadPost",
+	},
 }, {})
+-- test
+-- vim.opt.semantic_tokens = true
+vim.api.nvim_set_hl(0, "@lsp.type.function", { italic = true })
+-- vim.api.nvim_set_hl(0, "@function", { italic = true }) -- tree-sitter fallback
+vim.api.nvim_create_autocmd("LspAttach", {
+	callback = function(args)
+		local client = vim.lsp.get_client_by_id(args.data.client_id)
+		if client and client.server_capabilities.semanticTokensProvider then
+			vim.lsp.semantic_tokens.start(args.buf, client.id)
+		end
+	end,
+})
 
 -- [[ Configure nvim-cmp ]]
 -- See `:help cmp`
